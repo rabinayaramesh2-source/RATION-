@@ -1,0 +1,1 @@
+Run npm install after adding the package; react-router-dom is required by App.tsx.

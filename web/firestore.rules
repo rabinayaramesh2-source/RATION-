@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function admin() { return signedIn() && request.auth.token.admin == true; }
+    function device() { return signedIn() && request.auth.token.device == true; }
+
+    match /machines/{machineId} {
+      allow read: if signedIn();
+      allow create, update: if admin() || device();
+    }
+
+    match /hoppers/{commodity} {
+      allow read: if signedIn();
+      allow create, update: if admin() || device();
+    }
+
+    match /transactions/{id} {
+      allow read: if admin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create: if admin() || device();
+      allow update, delete: if admin();
+    }
+
+    match /beneficiaries/{id} {
+      allow read: if admin() || (signedIn() && request.auth.token.beneficiaryId == id);
+      allow write: if admin();
+    }
+
+    match /alerts/{id} {
+      allow read, update: if admin();
+      allow create: if admin() || device();
+    }
+
+    match /errors/{id} {
+      allow read: if admin();
+      allow create: if admin() || device();
+    }
+
+    match /users/{uid} {
+      allow read: if admin() || (signedIn() && uid == request.auth.uid);
+      allow write: if admin();
+    }
+  }
+}
